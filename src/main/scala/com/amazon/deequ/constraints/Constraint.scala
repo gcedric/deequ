@@ -625,6 +625,7 @@ object Constraint {
         case ConstrainableDataTypes.Boolean => pure(Boolean)
         case ConstrainableDataTypes.String => pure(String)
         case ConstrainableDataTypes.Numeric => d => pure(Fractional)(d) + pure(Integral)(d)
+        case ConstrainableDataTypes.Date => pure(Date)
       }
     }
 

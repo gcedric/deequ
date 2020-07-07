@@ -23,4 +23,5 @@ object ConstrainableDataTypes extends Enumeration {
   val Boolean: Value = Value(3)
   val String: Value = Value(4)
   val Numeric: Value = Value(5) // Union of integral and fractional
+  val Date: Value = Value(6)
 }

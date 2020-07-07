@@ -69,7 +69,7 @@ class NullHandlingTests extends WordSpec with Matchers with SparkContextSpec wit
       MaxLength("stringCol").computeStateFrom(data) shouldBe None
 
       DataType("stringCol").computeStateFrom(data) shouldBe
-        Some(DataTypeHistogram(8L, 0L, 0L, 0L, 0L))
+        Some(DataTypeHistogram(8L, 0L, 0L, 0L, 0L, 0L))
 
       Sum("numericCol").computeStateFrom(data) shouldBe None
       ApproxQuantile("numericCol", 0.5).computeStateFrom(data) shouldBe None

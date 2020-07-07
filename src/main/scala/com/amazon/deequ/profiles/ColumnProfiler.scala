@@ -565,8 +565,9 @@ object ColumnProfiler {
 
     genericStatistics.approximateNumDistincts
       .filter { case (column, _) =>
-        originalStringNumericOrBooleanColumns.contains(column) &&
-          Set(String, Boolean, Integral, Fractional).contains(genericStatistics.typeOf(column))
+        originalStringNumericOrBooleanColumns.contains(column) && Set(
+          String, Boolean, Integral, Fractional, Date
+        ).contains(genericStatistics.typeOf(column))
       }
       .filter { case (_, count) => count <= lowCardinalityHistogramThreshold }
       .map { case (column, _) => column }

@@ -35,6 +35,7 @@ object DataTypeInstances extends Enumeration {
   val Integral: Value = Value(2)
   val Boolean: Value = Value(3)
   val String: Value = Value(4)
+  val Date: Value = Value(5)
 }
 
 case class DataTypeHistogram(
@@ -42,23 +43,26 @@ case class DataTypeHistogram(
     numFractional: Long,
     numIntegral: Long,
     numBoolean: Long,
-    numString: Long)
+    numString: Long,
+    numDate: Long)
   extends State[DataTypeHistogram] {
 
   override def sum(other: DataTypeHistogram): DataTypeHistogram = {
     DataTypeHistogram(numNull + other.numNull, numFractional + other.numFractional,
-      numIntegral + other.numIntegral, numBoolean + other.numBoolean, numString + other.numString)
+      numIntegral + other.numIntegral, numBoolean + other.numBoolean, numString + other.numString,
+      numDate + other.numDate)
   }
 }
 
 object DataTypeHistogram {
 
-  val SIZE_IN_BYTES = 40
+  val SIZE_IN_BYTES = 48
   private[deequ] val NULL_POS = 0
   private[deequ] val FRACTIONAL_POS = 1
   private[deequ] val INTEGRAL_POS = 2
   private[deequ] val BOOLEAN_POS = 3
   private[deequ] val STRING_POS = 4
+  private[deequ] val DATE_POS = 5
 
   def fromBytes(bytes: Array[Byte]): DataTypeHistogram = {
     require(bytes.length == SIZE_IN_BYTES)
@@ -68,8 +72,9 @@ object DataTypeHistogram {
     val numIntegral = buffer.get(INTEGRAL_POS)
     val numBoolean = buffer.get(BOOLEAN_POS)
     val numString = buffer.get(STRING_POS)
+    val numDate = buffer.get(DATE_POS)
 
-    DataTypeHistogram(numNull, numFractional, numIntegral, numBoolean, numString)
+    DataTypeHistogram(numNull, numFractional, numIntegral, numBoolean, numString, numDate)
   }
 
   def toBytes(
@@ -77,7 +82,8 @@ object DataTypeHistogram {
       numFractional: Long,
       numIntegral: Long,
       numBoolean: Long,
-      numString: Long)
+      numString: Long,
+      numDate: Long)
     : Array[Byte] = {
 
     val out = ByteBuffer.allocate(SIZE_IN_BYTES)
@@ -88,6 +94,7 @@ object DataTypeHistogram {
     outB.put(numIntegral)
     outB.put(numBoolean)
     outB.put(numString)
+    outB.put(numDate)
 
     // TODO avoid allocation
     val bytes = new Array[Byte](out.remaining)
@@ -97,7 +104,8 @@ object DataTypeHistogram {
 
   def toDistribution(hist: DataTypeHistogram): Distribution = {
     val totalObservations =
-      hist.numNull + hist.numString + hist.numBoolean + hist.numIntegral + hist.numFractional
+      hist.numNull + hist.numString + hist.numBoolean + hist.numIntegral +
+      hist.numFractional + hist.numDate
 
     Distribution(Map(
       DataTypeInstances.Unknown.toString ->
@@ -109,7 +117,9 @@ object DataTypeHistogram {
       DataTypeInstances.Boolean.toString ->
         DistributionValue(hist.numBoolean, hist.numBoolean.toDouble / totalObservations),
       DataTypeInstances.String.toString ->
-        DistributionValue(hist.numString, hist.numString.toDouble / totalObservations)),
+        DistributionValue(hist.numString, hist.numString.toDouble / totalObservations),
+      DataTypeInstances.Date.toString ->
+        DistributionValue(hist.numDate, hist.numDate.toDouble / totalObservations)),
       numberOfBins = 5)
   }
 
@@ -131,8 +141,10 @@ object DataTypeHistogram {
         if (ratioOf(Boolean, dist) > 0.0) {
           Boolean
         } else {
-          // If we have seen one fractional, we go with that type
-          if (ratioOf(Fractional, dist) > 0.0) {
+          if (ratioOf(Date, dist) > 0.0) {
+            Date
+          } else if (ratioOf(Fractional, dist) > 0.0) {
+            // If we have seen one fractional, we go with that type
             Fractional
           } else {
             Integral
