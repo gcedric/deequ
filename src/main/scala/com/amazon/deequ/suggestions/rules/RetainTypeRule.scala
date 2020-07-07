@@ -42,6 +42,7 @@ case class RetainTypeRule() extends ConstraintRule[ColumnProfile] {
       case DataTypeInstances.Fractional => ConstrainableDataTypes.Fractional
       case DataTypeInstances.Integral => ConstrainableDataTypes.Integral
       case DataTypeInstances.Boolean => ConstrainableDataTypes.Boolean
+      case DataTypeInstances.Date => ConstrainableDataTypes.Date
     }
 
     val constraint = dataTypeConstraint(profile.column, typeToCheck, Check.IsOne)
